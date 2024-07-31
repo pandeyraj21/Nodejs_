@@ -1,9 +1,11 @@
 const express = require('express');
 const app = express();
 const db =require('./db');
+require('dotenv').config();
 
 //connecting the middleware for parsing the data
 const bodyParser =require('body-parser');
+const PORT = process.env.PORT ||3000;
 app.use(bodyParser.json());
 
 
@@ -55,5 +57,4 @@ app.use('/menu',menuItemRoutes)
 app.get('/raj',(req,res)=>{
     res.send('hi raj')
 })
-
-app.listen(3000) 
+app.listen(PORT) 
