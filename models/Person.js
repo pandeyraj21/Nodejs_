@@ -1,4 +1,5 @@
 const mongoose =require('mongoose');
+const bcrypt = require('bcryptjs')
 
 //Define the person Schema
 const personSchema =new mongoose.Schema({
@@ -29,8 +30,52 @@ const personSchema =new mongoose.Schema({
     salary:{
         type:Number,
         required:true
+    },
+    username:{
+        required:true,
+        type:String
+    },
+    password:{
+        required:true,
+        type:String
     }
 });
+
+//pre is a middleware function for mongoose that we are triggering before saving the password in db's.
+personSchema.pre('save',async function(next){
+      const person =this;
+      if(!person.isModified('password')) return next(); //next is callback function which is provided by mongooose 
+
+      try{
+          //hash password generation
+          const salt = await bcrypt.genSalt(10)
+
+          //hash password
+          const hashedPassword =await bcrypt.hash(person.password,salt)
+
+
+          //Override the plain password with the hashed one
+          person.password =hashedPassword;
+          next();
+      }catch(err){
+        return next(err);
+
+      }
+})
+
+
+//function for matching the password in auth
+personSchema.methods.comparePassword = async function(candidatePassword){
+
+      try{
+      //Use bcrypt to compare the provided password with the hashed password
+      const isMatch =await bcrypt.compare(candidatePassword,this.password);
+      return isMatch;
+      }catch(err){
+        throw err
+      }
+}
+
 
 //Create Person Model
 const Person =mongoose.model('Person',personSchema);
